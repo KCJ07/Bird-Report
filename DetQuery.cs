@@ -41,7 +41,6 @@ class DetQuery
     }
 
     // Get a list of species in your local 
-    // TODO: need to make a wrapper class and return it as that 
     public async Task<List<Observation>> GetSpeciesNearby(double lat, double lng, int distKm = 25, int prevDays = 1)
     {
         // keeps distance between apis abilities
