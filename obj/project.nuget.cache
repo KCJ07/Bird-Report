@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "FaaOtnIdpLE=",
+  "dgSpecHash": "L0HmOImBOU4=",
   "success": true,
   "projectFilePath": "C:\\Users\\Kevin\\Documents\\C#\\LearningC#\\CsharpProjects\\Bird-Report\\Bird-Report.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Kevin\\.nuget\\packages\\microsoft.maui.essentials\\10.0.80\\microsoft.maui.essentials.10.0.80.nupkg.sha512",
+    "C:\\Users\\Kevin\\.nuget\\packages\\microsoft.maui.graphics\\10.0.80\\microsoft.maui.graphics.10.0.80.nupkg.sha512"
+  ],
   "logs": []
 }
