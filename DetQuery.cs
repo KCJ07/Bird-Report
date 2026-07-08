@@ -117,10 +117,41 @@ class DetQuery
     }
 
     // calculates birding activity via the number of nearby checkpoints MAX is 200
-    public async Task<int>BirdActViaChecklists(string regionCode)
+    public async Task<int>BirdActViaChecklists(string regionCode, int y, int m, int d)
     {
-        List<Hotspot> hotspots = await GetRecentChecklists(regionCode);
+        List<Hotspot> hotspots = await GetChecklistsByDay(regionCode, y, m, d);
         return hotspots.Count();
+    }
+
+    // Gets notable observations of a bird
+    public async Task<List<NotableReport>>GetNearbyNotable(string regionCode, int prevDays = 1, string detail = "full")
+    {
+        List<Observation> observations = new();
+        string url = $"https://api.ebird.org/v2/data/obs/{regionCode}/recent/notable" +
+            $"?back={prevDays}" +
+            $"&detail={detail}";
+
+        try
+        {
+        observations = await client.GetFromJsonAsync<List<Observation>>(url);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            Console.WriteLine("Issue querying notbale ebird API");
+        }
+
+        List<NotableReport> report = observations.Select(o => new NotableReport(
+            o.ComName,
+            o.SciName,
+            o.LocName,
+            o.ObsDt,
+            o.HowMany,
+            o.ObsReviewed,
+            o.LocationPrivate
+        )).ToList();
+
+        return report;
     }
 }
 

@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.Sockets;
+using System.Text.Json;
 
 
 /// minimal API
@@ -42,9 +43,10 @@ var (lat, lng) = await Det.GetLatLongFromAddr();
 
 // Get Species List for past day 
 List<Observation> speciesOneDay = await Det.GetSpeciesNearby(lat,lng);
-
+string speciesOneDayJSON = JsonSerializer.Serialize(speciesOneDay);
 // Get Species List for past 7 days 
 List<Observation> speciesSevenDay = await Det.GetSpeciesNearby(lat,lng);
+string speciesSevenDayJSON = JsonSerializer.Serialize(speciesSevenDay);
 
 // Get Count of Bird Species from 1 day
 int speciesOneDayCount = speciesOneDay.DistinctBy(o => o.SpeciesCode).Count();
@@ -62,9 +64,6 @@ string countyCode = await Det.GetCountyCode(lat,lng);
 
 int birdActYesterday = await Det.BirdActViaChecklists(countyCode, year, month, day);
 
-
-// get species (Species count?) from specific locations 
 // Get Notable Birds 
-// Difference from yesterday
-// Checklist volume (to simulate activity)
-// Highest checlist volume area
+List<NotableReport> notableReportOneDay = await Det.GetNearbyNotable(countyCode);
+string notableReportOneDayJSON = JsonSerializer.Serialize(notableReportOneDay);
