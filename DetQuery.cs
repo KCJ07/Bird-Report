@@ -2,6 +2,8 @@
 // Class to handle Queries to e-Bird API for deterministic calculations
 //
 
+using System.Text;
+using Microsoft.Extensions.ObjectPool;
 using Microsoft.Maui.Devices.Sensors;
 
 class DetQuery
@@ -51,7 +53,7 @@ class DetQuery
                     $"&lng={lng:F2}" +
                     $"&dist={distKm}" +
                     $"&back={prevDays}";
-                    
+
         try
         {
         List<Observation> observations = await client.GetFromJsonAsync<List<Observation>>(url);
@@ -66,5 +68,90 @@ class DetQuery
 
     }
 
+    // get local county code 
+    public async Task<string> GetCountyCode(double lat, double lng)
+    {
+        List<Hotspot> hotspots = new(); // might break everything
+
+        try
+        {
+        string url = "https://api.ebird.org/v2/ref/hotspot/geo" + 
+                    $"?lat={lat:F2}" +
+                    $"&lng={lng:F2}";
+
+        hotspots = await client.GetFromJsonAsync<List<Hotspot>>(url);
+        
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            Console.WriteLine("error in getting nearest hotspot for county code");
+        }
+
+        Hotspot hotspot = hotspots.FirstOrDefault() ?? throw new InvalidOperationException("not able to find a hotspot for county code");
+
+        return hotspot.Subnational2Code;
+    }
+
+    // gets the number of nearby checklists to a given region on a specific day
+    public async Task<List<Hotspot>>GetChecklistsByDay(string regionCode, int y, int m, int d)
+    {
+        List<Hotspot> hotspots = new(); // might break everything
+
+        try
+        {
+            string url = $"https://api.ebird.org/v2/product/lists/{regionCode}/{y}/{m}/{d}?maxResults=200";
+
+
+            hotspots = await client.GetFromJsonAsync<List<Hotspot>>(url);
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            Console.WriteLine("error in getting nearest hotspots using county code");
+        }
+
+ 
+        return hotspots;
+    }
+
+    // calculates birding activity via the number of nearby checkpoints MAX is 200
+    public async Task<int>BirdActViaChecklists(string regionCode, int y, int m, int d)
+    {
+        List<Hotspot> hotspots = await GetChecklistsByDay(regionCode, y, m, d);
+        return hotspots.Count();
+    }
+
+    // Gets notable observations of a bird
+    public async Task<List<NotableReport>>GetNearbyNotable(string regionCode, int prevDays = 1, string detail = "full")
+    {
+        List<Observation> observations = new();
+        string url = $"https://api.ebird.org/v2/data/obs/{regionCode}/recent/notable" +
+            $"?back={prevDays}" +
+            $"&detail={detail}";
+
+        try
+        {
+        observations = await client.GetFromJsonAsync<List<Observation>>(url);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            Console.WriteLine("Issue querying notbale ebird API");
+        }
+
+        List<NotableReport> report = observations.Select(o => new NotableReport(
+            o.ComName,
+            o.SciName,
+            o.LocName,
+            o.ObsDt,
+            o.HowMany,
+            o.ObsReviewed,
+            o.LocationPrivate
+        )).ToList();
+
+        return report;
+    }
 }
 
