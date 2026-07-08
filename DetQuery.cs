@@ -34,7 +34,7 @@ class DetQuery
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                Console.WriteLine(ex.Message);
                 Console.WriteLine("Address conversion failed please try again");
             }
         }
@@ -51,7 +51,7 @@ class DetQuery
                     $"&lng={lng:F2}" +
                     $"&dist={distKm}" +
                     $"&back={prevDays}";
-
+                    
         try
         {
         List<Observation> observations = await client.GetFromJsonAsync<List<Observation>>(url);
