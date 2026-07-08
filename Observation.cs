@@ -1,4 +1,4 @@
-// wrapper class for individual e-bird observations
+// wrapper class for individual e-bird observations for JSON de-serialization
 
 using System.Text.Json.Serialization;
 

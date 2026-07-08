@@ -52,6 +52,17 @@ int speciesOneDayCount = speciesOneDay.DistinctBy(o => o.SpeciesCode).Count();
 // Get Count of Bird Species from 7 days 
 int speciesSevenDayCount = speciesSevenDay.DistinctBy(o => o.SpeciesCode).Count();
 
+// get bird activity for past day
+DateTime yesterday = DateTime.Today.AddDays(-1);
+int year = yesterday.Year;
+int month = yesterday.Month;
+int day = yesterday.Day;
+
+string countyCode = await Det.GetCountyCode(lat,lng);
+
+int birdActYesterday = await Det.BirdActViaChecklists(countyCode, year, month, day);
+
+
 // get species (Species count?) from specific locations 
 // Get Notable Birds 
 // Difference from yesterday
