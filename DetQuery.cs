@@ -141,15 +141,16 @@ class DetQuery
             Console.WriteLine("Issue querying notbale ebird API");
         }
 
-        List<NotableReport> report = observations.Select(o => new NotableReport(
-            o.ComName,
-            o.SciName,
-            o.LocName,
-            o.ObsDt,
-            o.HowMany,
-            o.ObsReviewed,
-            o.LocationPrivate
-        )).ToList();
+        List<NotableReport> report = observations.Select(o => new NotableReport
+        {
+            ComName = o.ComName,
+            SciName = o.SciName,
+            LocName = o.LocName,
+            ObsDt = o.ObsDt,
+            HowMany = o.HowMany,
+            ObsReviewed = o.ObsReviewed,
+            LocationPrivate = o.LocationPrivate
+        }).ToList();
 
         return report;
     }
