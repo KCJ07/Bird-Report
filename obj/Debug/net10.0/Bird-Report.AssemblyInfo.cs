@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Bird-Report")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+20a3e1968907a8e527d9f18504cb274c6af2a64c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d58aadd3cbae3c720e38d5f937db116784b42e5c")]
 [assembly: System.Reflection.AssemblyProductAttribute("Bird-Report")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Bird-Report")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
