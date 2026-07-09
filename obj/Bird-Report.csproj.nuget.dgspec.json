@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Kevin\\Documents\\C#\\LearningC#\\CsharpProjects\\Bird-Report\\Bird-Report.csproj": {}
+    "/Users/mariarodriguez/Bird-Report/Bird-Report.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Kevin\\Documents\\C#\\LearningC#\\CsharpProjects\\Bird-Report\\Bird-Report.csproj": {
+    "/Users/mariarodriguez/Bird-Report/Bird-Report.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Kevin\\Documents\\C#\\LearningC#\\CsharpProjects\\Bird-Report\\Bird-Report.csproj",
+        "projectUniqueName": "/Users/mariarodriguez/Bird-Report/Bird-Report.csproj",
         "projectName": "Bird-Report",
-        "projectPath": "C:\\Users\\Kevin\\Documents\\C#\\LearningC#\\CsharpProjects\\Bird-Report\\Bird-Report.csproj",
-        "packagesPath": "C:\\Users\\Kevin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Kevin\\Documents\\C#\\LearningC#\\CsharpProjects\\Bird-Report\\obj\\",
+        "projectPath": "/Users/mariarodriguez/Bird-Report/Bird-Report.csproj",
+        "packagesPath": "/Users/mariarodriguez/.nuget/packages/",
+        "outputPath": "/Users/mariarodriguez/Bird-Report/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Kevin\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/Users/mariarodriguez/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -46,6 +46,10 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "dependencies": {
+            "Anthropic": {
+              "target": "Package",
+              "version": "[12.5.0, )"
+            },
             "Microsoft.Maui.Essentials": {
               "target": "Package",
               "version": "[10.0.80, )"
@@ -70,7 +74,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

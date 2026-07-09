@@ -2,6 +2,35 @@
   "version": 4,
   "targets": {
     "net10.0": {
+      "Anthropic/12.5.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.2.0"
+        },
+        "compile": {
+          "lib/net9.0/Anthropic.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Anthropic.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Microsoft.Extensions.AI.Abstractions/10.2.0": {
+        "type": "package",
+        "compile": {
+          "lib/net10.0/Microsoft.Extensions.AI.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.AI.Abstractions.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.Maui.Essentials/10.0.80": {
         "type": "package",
         "dependencies": {
@@ -34,6 +63,48 @@
     }
   },
   "libraries": {
+    "Anthropic/12.5.0": {
+      "sha512": "gNGmD2mbeDrsoPcKzheioCUpIQfEQMfkEg1oPLbGqXSXpwQZSKZl/cv3jYNQ/id8625iun34va7BkFhdlOvxXQ==",
+      "type": "package",
+      "path": "anthropic/12.5.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "anthropic.12.5.0.nupkg.sha512",
+        "anthropic.nuspec",
+        "lib/net8.0/Anthropic.dll",
+        "lib/net8.0/Anthropic.xml",
+        "lib/net9.0/Anthropic.dll",
+        "lib/net9.0/Anthropic.xml",
+        "lib/netstandard2.0/Anthropic.dll",
+        "lib/netstandard2.0/Anthropic.xml",
+        "logo.png"
+      ]
+    },
+    "Microsoft.Extensions.AI.Abstractions/10.2.0": {
+      "sha512": "ONGlIBht0ygEdKc0bCt9XWUiq19/460dAu7fCKzPM34OFJSMQIohEDTJwjCJ8vVp8znNakloc9xFF9+R/eDCYQ==",
+      "type": "package",
+      "path": "microsoft.extensions.ai.abstractions/10.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "README.md",
+        "lib/net10.0/Microsoft.Extensions.AI.Abstractions.dll",
+        "lib/net10.0/Microsoft.Extensions.AI.Abstractions.xml",
+        "lib/net462/Microsoft.Extensions.AI.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.AI.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.AI.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.AI.Abstractions.xml",
+        "lib/net9.0/Microsoft.Extensions.AI.Abstractions.dll",
+        "lib/net9.0/Microsoft.Extensions.AI.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.AI.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.AI.Abstractions.xml",
+        "microsoft.extensions.ai.abstractions.10.2.0.nupkg.sha512",
+        "microsoft.extensions.ai.abstractions.nuspec"
+      ]
+    },
     "Microsoft.Maui.Essentials/10.0.80": {
       "sha512": "TPEmubDTO15KRJdlJLSjR8zVVepk6tKiNBXmqpZebez9mvJyi4lmsWwuboFKM56COuGAlY+eVUFDesQlz66Eyw==",
       "type": "package",
@@ -123,23 +194,24 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
+      "Anthropic >= 12.5.0",
       "Microsoft.Maui.Essentials >= 10.0.80"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Kevin\\.nuget\\packages\\": {}
+    "/Users/mariarodriguez/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Kevin\\Documents\\C#\\LearningC#\\CsharpProjects\\Bird-Report\\Bird-Report.csproj",
+      "projectUniqueName": "/Users/mariarodriguez/Bird-Report/Bird-Report.csproj",
       "projectName": "Bird-Report",
-      "projectPath": "C:\\Users\\Kevin\\Documents\\C#\\LearningC#\\CsharpProjects\\Bird-Report\\Bird-Report.csproj",
-      "packagesPath": "C:\\Users\\Kevin\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Kevin\\Documents\\C#\\LearningC#\\CsharpProjects\\Bird-Report\\obj\\",
+      "projectPath": "/Users/mariarodriguez/Bird-Report/Bird-Report.csproj",
+      "packagesPath": "/Users/mariarodriguez/.nuget/packages/",
+      "outputPath": "/Users/mariarodriguez/Bird-Report/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Kevin\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/Users/mariarodriguez/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
@@ -171,6 +243,10 @@
         "framework": "net10.0",
         "targetAlias": "net10.0",
         "dependencies": {
+          "Anthropic": {
+            "target": "Package",
+            "version": "[12.5.0, )"
+          },
           "Microsoft.Maui.Essentials": {
             "target": "Package",
             "version": "[10.0.80, )"
@@ -195,7 +271,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
