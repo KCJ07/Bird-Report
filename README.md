@@ -81,20 +81,56 @@ The MCP server won't live in this repo — it'll be a separate Python process, c
 
 ## Roadmap
 
+### Daily
+
+**Deterministic**
+- [X] Recent nearby birds, past 1 day
+- [X] Count of different species seen, past day
+- [X] Recent nearby birds, past 7 days
+- [X] Count of different species seen, past 7 days
+- [X] Total volume of checklists in your county, past day
+- [X] Notbale Birds Seen in county with DTO for specifics 
+
+**Deterministic, via cache**
+- [ ] Checklist volume — difference between past day and the day before
+- [ ] Top hotspot area in your county, past 3 days ( expensive — loops through every hotspot in the area)
+
+**Claude, key reasoning**
+- [ ] Ask for differences in birds seen past day vs. past week
+- [ ] Ask why it thinks these new birds showed up
+- [ ] Ask for notable observations (detail=full), and have it explain why/how it thinks they were observed, and whether they've been reviewed
+- [ ] Flag "seen here but rare for the area"
+- [ ] Give taxonomy or a fun fact for a bird seen yesterday
+- [ ] Figure out how to incorporate web searching
+- [ ] Figure out how to incorporate weather API
+
+**MCP, via cache**
+- [ ] Difference between yesterday and today — why, including weather context
+
+### Weekly
+- [ ] Deterministic stats, grounded in real week-over-week deltas, not just a bigger daily summary
+- [ ] MCP-enriched reasoning
+- [ ] Delivery via local app / dashboard
+
+### Questions to explore
+- [X] How to get the Claude API to query other APIs the way an MCP would
+- [X] How the Claude API differs from Claude Desktop/terminal, and whether it can be used programmatically
+- [X] Is there a better alternative to using a raw API key?
+
+### Infra / setup
+- [ ] Add `.gitignore` (`obj/`, `bin/`, IDE files, secrets)
+- [ ] Configure environment variables (`.env`) for API keys
+- [ ] Add caching
+- [ ] Fork the MCP server and modify it so it doesn't depend on a Claude Desktop UI
+- [ ] Summarize activity for any days that got skipped (missed run, outage, etc.)
+
+### Base build
 - [ ] Set up the base project structure (API host, jobs, data layer, orchestrator)
 - [ ] Get the MCP server talking to the orchestrator over stdio
-- [ ] Build out the EF Core models and initial migration
-- [ ] Daily collect job + deterministic stats computation
 - [ ] Wire up the bounded agentic loop: stats as context, live MCP tool access, turn cap, forced final answer
 - [ ] Daily email delivery
-- [ ] Weekly report, grounded in real week-over-week deltas, not just a bigger daily summary
-- [ ] Watchlist flagging
 - [ ] Minimal dashboard to view reports
 - [ ] Import personal submission history from eBird's CSV export
-- [ ] UI for managing locations instead of editing the DB directly
-- [ ] Check whether regional/species endpoints give usable arrival-date data, or whether that needs eBird's full Basic Dataset
-- [ ] Fix the "daily" window to use local timezone, not naive UTC, from day one
-- [ ] Tests for the dedupe logic before it ships, not after
 - [ ] Maybe write my own MCP server in C# someday, just to keep one language — not urgent
 
 ## Acknowledgments
