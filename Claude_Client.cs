@@ -1,4 +1,4 @@
-
+/* 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Daily birding report client:
 //   PART 1 - eBird MCP tools (stdio) for structured observation data
@@ -136,3 +136,4 @@ var recentObservations = await AskEbirdAsync(
 
 Console.WriteLine("=== eBird observations ===");
 Console.WriteLine(recentObservations);
+ */

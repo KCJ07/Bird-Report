@@ -20,10 +20,7 @@ app.Run();
 /// end of minimal API
 */
 
-// subject to change currently just asks user for api token
-DetQuery? Det = null;
-while(true)
-{
+/* 
     try 
     {
         Console.WriteLine("Please input your e-bird API token");
@@ -36,11 +33,13 @@ while(true)
     {
         Console.WriteLine(ex.Message);
         Console.WriteLine("An issue with api token occured please try again");
-    }
-}
+    } */
 
+//load env
+DotNetEnv.Env.Load();  // reads .env from the current working directory by default
 
-
+string apiToken = Environment.GetEnvironmentVariable("EBIRD_API_KEY");
+DetQuery Det = new(apiToken);
 
 
 // ask user for address
@@ -95,7 +94,7 @@ string notableReportOneDayJSON = JsonSerializer.Serialize(notableReportOneDay);
 // Fix path                                                         X
 // figure out web searching (doing it at end)                       X
 // combine two outputs into one output                              X
-// make sure it can access env keys
+// make sure it can access env keys                                 X
 // comment code                                                     X
 // figure out how to make it cleanly wrap up at 5 tool call uses    X
 // fix prompts
@@ -114,13 +113,13 @@ AnthropicClient anthropicClient = new()
 // ============================================================
 
 // Point this at the folder containing server.py + client.py.
-var mcpServerDirectory = Path.Combine(Environment.CurrentDirectory + "/MCP", "mcp-server");
+var mcpServerDirectory = Path.Combine(Environment.CurrentDirectory + "\\MCP");
 
 // spawns the MCP server to handle its IO
 var transport = new StdioClientTransport(new StdioClientTransportOptions
 {
     Name = "ebird",
-    Command = "python3",              // switched this to python3 because client and server in mcp are py3. pretty sure this means we need to install py3 to run this as well
+    Command = "python",              // switched this to python
     Arguments = ["server.py"],
     WorkingDirectory = mcpServerDirectory,
     EnvironmentVariables = new Dictionary<string, string?>
@@ -138,7 +137,7 @@ IChatClient chatClient = innerChatClient
     .AsBuilder()
     .UseFunctionInvocation(configure: c =>
     {
-        c.MaximumIterationsPerRequest = 5;  // handles the tool-call loop and sets it to 5. No guarentee that it finishes up cleanly?
+        c.MaximumIterationsPerRequest = 3;  // handles the tool-call loop and sets it to 5. No guarentee that it finishes up cleanly?
     })            
     .Build();
 
@@ -149,9 +148,12 @@ async Task<string> AskEbirdAsync(string prompt)
     ChatOptions options = new()
     {
         Tools = [.. (await mcpClient.ListToolsAsync()).Cast<AITool>()], // super fancy syntax
+        MaxOutputTokens = 4096,
     };
 
     var response = await chatClient.GetResponseAsync(prompt, options);
+    Console.WriteLine($"[DEBUG] First response FinishReason: {response.FinishReason}");
+    Console.WriteLine($"[DEBUG] First response Text: '{response.Text}'");
 
     // if this results to true it means did not call as many tools as it wanted
     if (response.FinishReason == ChatFinishReason.ToolCalls)
@@ -165,8 +167,13 @@ async Task<string> AskEbirdAsync(string prompt)
 
         history.Add(new ChatMessage(ChatRole.User, "Give your best final answer now based only on what you've already found, without calling any more tools."));
 
-        response = await chatClient.GetResponseAsync(history, new ChatOptions()); // re send everything with no tools
+        response = await chatClient.GetResponseAsync(history, new ChatOptions
+        {
+            MaxOutputTokens = 4096
+        }); // re send everything with no tools
 
+        Console.WriteLine($"[DEBUG] Second response FinishReason: {response.FinishReason}");
+        Console.WriteLine($"[DEBUG] Second response Text: '{response.Text}'");
     }
 
     // run a web search on final result to enrich results
@@ -180,39 +187,83 @@ async Task<string> AskEbirdAsync(string prompt)
         ],
         Messages =
         [
-            new() { Role = Role.User, Content = response.Text },
+            new() { Role = Role.User, Content = $"""
+                Here is today's birding digest, generated from eBird observation data:
+
+                {response.Text}
+
+                Using web search, verify or add context to the claims in this digest 
+                (e.g. out-of-season sightings, notable rarities, oversummering birds, migration and weaather patterns). Then return 
+                the complete, finalized digest as a single polished piece of writing for a birding 
+                newsletter — do not comment on the task, do not ask clarifying questions, and do not 
+                include any meta-commentary about what you searched for. Just output the final report.
+                """
+            },
         ],
     };
 
-    var fullResponse = await anthropicClient.Messages.Create(parameters);
+    
+    try
+    {
+        var fullResponse = await anthropicClient.Messages.Create(parameters);
+        
+        return string.Join(
+            "\n\n",
+            fullResponse.Content
+                .Select(block => block.Value)
+                .OfType<TextBlock>()
+                .Select(textBlock => textBlock.Text)
+        );
+        
+    }
+    catch (Anthropic.Exceptions.AnthropicBadRequestException ex)
+    {
+        Console.WriteLine($"Message: {ex.Message}");
+        Console.WriteLine($"Full details: {ex}");
+        throw; // rethrows crash after logging because program still needs to fail here 
+    }
 
-    return string.Join(
-        "",
-        fullResponse.Content
-            .Select(block => block.Value)
-            .OfType<TextBlock>()
-            .Select(textBlock => textBlock.Text)
-    );
+
 
 }
 
 
 
 // ============================================================
-// PART 3 - Compile the daily report
+// PART 3 - report
 // ============================================================
 
-var recentObservations = await AskEbirdAsync(
-    "Using all the following information given, enrich it and provide a daily summary like you were a small birding digest helper: species seen in past day" + 
-    speciesOneDayJSON + "last day count: " + speciesOneDayCount + 
-    "species seen in past 7 days: " + speciesSevenDay + "species 7 day count: " + speciesSevenDayCount + 
-    "County: " + countyCode +
-    "Hotspot activity measured via # of checklists: " + birdActYesterday +
-    "notbale Birds in past day: " + notableReportOneDayJSON +
-    "Some key questions to answer include why these new birds were seen yesterday, why the rare birds were seen and if they were reviewed, what birds were seen here but rare for the area, and a fun fact about one of the birds seen. Try to incorporate weather or migration patterns into your summary."
-    );
+    string prompt = $"""
+    Using all the following information, enrich it and provide a daily summary
+    like you were a small birding digest helper. All the data given are facts and pulled from e-bird so treat it as such.
+    Do not add any caveats on your expertise and don't use emojies. Be sure to Talk about birds actually seen and give a few 
+    places/ environments you might see a few of them in. Focus more on birding and give a recomendation on where and when to bird the following day because these 
+    outputs are from yesterday. You have up to 3 rounds of tool use available if you need to look up additional eBird data — each round can include multiple tool calls if needed. 
+    Do not make an absurd amount of calls to ebird because there is a personal limit. 
+
+    Species seen in past day: {speciesOneDayJSON}
+    Past-day species count: {speciesOneDayCount}
+
+    Species seen in past 7 days: {speciesSevenDayJSON}
+    7-day species count: {speciesSevenDayCount}
+
+    County: {countyCode}
+    Hotspot activity (checklists submitted yesterday): {birdActYesterday}
+    Notable birds in past day: {notableReportOneDayJSON}
+
+    Key questions to answer:
+    - Why were these new birds seen yesterday?
+    - Why were the rare birds seen, and were they reviewed?
+    - Which birds seen here are typically rare for the area?
+    - Share a fun fact about one of the birds seen.  
+    - Incorporate weather or migration patterns into your summary.
+    """;
+
+
+var recentObservations = await AskEbirdAsync(prompt);
 
 
 Console.WriteLine("=== eBird observations ===");
 Console.WriteLine(recentObservations);
+
 

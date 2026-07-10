@@ -1,4 +1,4 @@
-// calls claude w api key to ask claude the prompt, and return text onto terminal
+/* // calls claude w api key to ask claude the prompt, and return text onto terminal
 // https://www.youtube.com/watch?v=g1p2pXS5X3c
 
 // TO DO: Edit to receive the tools from MCP server and query additional Q's not included
@@ -50,3 +50,4 @@ static async Task SyncMessage(AnthropicClient client, MessageCreateParams parame
     Console.WriteLine(message);
     Console.ReadLine();
 }
+ */

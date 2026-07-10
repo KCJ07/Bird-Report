@@ -13,23 +13,14 @@ public class Observation
     [JsonPropertyName("sciName")]
     public string SciName { get; set; }
 
-    [JsonPropertyName("locId")]
-    public string LocId { get; set; }
-
     [JsonPropertyName("locName")]
     public string LocName { get; set; }
 
     [JsonPropertyName("obsDt")]
-    public string ObsDt { get; set; }   // eBird sends this as a string, e.g. "2026-07-05 08:30"
+    public string ObsDt { get; set; }   
 
     [JsonPropertyName("howMany")]
-    public int? HowMany { get; set; }   // nullable — see earlier conversation, count is sometimes omitted
-
-    [JsonPropertyName("lat")]
-    public double Lat { get; set; }
-
-    [JsonPropertyName("lng")]
-    public double Lng { get; set; }
+    public int? HowMany { get; set; }   // nullable, count is sometimes omitted
 
     [JsonPropertyName("obsValid")]
     public bool ObsValid { get; set; }
@@ -40,6 +31,7 @@ public class Observation
     [JsonPropertyName("locationPrivate")]
     public bool LocationPrivate { get; set; }
 
-    [JsonPropertyName("subId")]
-    public string SubId { get; set; }
+    [JsonPropertyName("exoticCategory")]
+    public string? ExoticCategory { get; set; }
 }
+

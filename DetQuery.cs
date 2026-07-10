@@ -5,6 +5,8 @@
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Maui.Devices.Sensors;
+using System.Text.Json;
+
 
 class DetQuery
 {
@@ -14,7 +16,7 @@ class DetQuery
         client = new();
         client.DefaultRequestHeaders.Accept.Clear();
         // put in each individuals api token
-        client.DefaultRequestHeaders.Add("X-eBirdApiToken", apiToken);
+        client.DefaultRequestHeaders.Add("x-ebirdapitoken", apiToken);
 
     }
 
@@ -29,10 +31,30 @@ class DetQuery
             Console.WriteLine("Please put in your address");
             string addr = Console.ReadLine();
 
-            IEnumerable<Location> locations = await Geocoding.Default.GetLocationsAsync(addr);
-            Location location = locations.FirstOrDefault();
+            string url = "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress" +
+                $"?address={Uri.EscapeDataString(addr)}" +
+                "&benchmark=Public_AR_Current&format=json";
 
-            return (location.Latitude, location.Longitude);
+            using var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode(); 
+
+            using var stream = await response.Content.ReadAsStreamAsync(); 
+            using var doc = await JsonDocument.ParseAsync(stream);
+
+            var matches =doc.RootElement
+            .GetProperty("result")
+            .GetProperty("addressMatches");
+
+            if (matches.GetArrayLength() == 0)
+                throw new InvalidOperationException("No matches found for that address.");
+
+            // gets the first address that matches
+            var coords = matches[0].GetProperty("coordinates");
+
+            double lng = coords.GetProperty("x").GetDouble();
+            double lat = coords.GetProperty("y").GetDouble();
+
+            return (lat, lng);
             }
             catch (Exception ex)
             {
@@ -77,7 +99,9 @@ class DetQuery
         {
         string url = "https://api.ebird.org/v2/ref/hotspot/geo" + 
                     $"?lat={lat:F2}" +
-                    $"&lng={lng:F2}";
+                    $"&lng={lng:F2}" +
+                    "&fmt=json";
+
 
         hotspots = await client.GetFromJsonAsync<List<Hotspot>>(url);
         
