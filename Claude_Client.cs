@@ -13,18 +13,21 @@
 
 //TODO:
 // move to main file (program.cs)
-// Fix path                                 X
-// figure out web searching
-// combine two outputs into one output
+// Fix path                                                         X
+// figure out web searching (doing it at end)                       X
+// combine two outputs into one output                              X
 // make sure it can access env keys
-// comment code 
-// figure out how to make it cleanly wrap up at 5 tool call uses
+// comment code                                                     X
+// figure out how to make it cleanly wrap up at 5 tool call uses    X
 
 
 using Anthropic;
 using Anthropic.Models.Messages;
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
+
+public class Claude_Client
+{
 
 var apiKey = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
 
@@ -94,46 +97,34 @@ async Task<string> AskEbirdAsync(string prompt)
 
     }
 
-    return response.Text;
-}
-
-// ============================================================
-// PART 2 - Weather / open-ended reasoning, via the raw Messages API
-// with Anthropic's built-in web_search server tool. No MCP client,
-// no local handler - Claude calls it and returns cited results.
-// ============================================================
-
-async Task<string> AskWithWebSearchAsync(string prompt)
-{
+    // run a web search on final result to enrich results
     MessageCreateParams parameters = new()
     {
         Model = "claude-sonnet-5",
-        MaxTokens = 2048,
+        MaxTokens = 4000,               // need to test this to see if 400 is actually enough
         Tools =
         [
-            // NOTE: Anthropic periodically ships new dated versions of this
-            // tool (e.g. WebSearchTool20250305, newer dynamic-filtering
-            // versions followed). Check IntelliSense / the current C# SDK
-            // docs for the class name that matches your installed package
-            // version if this doesn't compile as-is.
-            new WebSearchTool20250305(),
+            new WebSearchTool20250305(), // claudes current web search engine
         ],
         Messages =
         [
-            new() { Role = Role.User, Content = prompt },
+            new() { Role = Role.User, Content = response.Text },
         ],
     };
 
-    var response = await anthropicClient.Messages.Create(parameters);
+    var fullResponse = await anthropicClient.Messages.Create(parameters);
 
     return string.Join(
         "",
-        response.Content
+        fullResponse.Content
             .Select(block => block.Value)
             .OfType<TextBlock>()
             .Select(textBlock => textBlock.Text)
     );
+
 }
+
+
 
 // ============================================================
 // PART 3 - Compile the daily report
@@ -142,13 +133,6 @@ async Task<string> AskWithWebSearchAsync(string prompt)
 var recentObservations = await AskEbirdAsync(
     "What are today's notable bird observations in Arkansas (region code US-AR)?");
 
-var reasoning = await AskWithWebSearchAsync(
-    "Search for reasons there might be an influx of mountain bluebirds in Arkansas " +
-    "recently, and give today's weather forecast for northwest Arkansas.");
 
 Console.WriteLine("=== eBird observations ===");
 Console.WriteLine(recentObservations);
-Console.WriteLine();
-Console.WriteLine("=== Weather & context ===");
-Console.WriteLine(reasoning);
-Console.ReadLine();
