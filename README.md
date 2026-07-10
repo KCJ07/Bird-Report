@@ -133,6 +133,11 @@ The MCP server won't live in this repo — it'll be a separate Python process, c
 - [ ] Import personal submission history from eBird's CSV export
 - [ ] Maybe write my own MCP server in C# someday, just to keep one language — not urgent
 
+## Prerequisites
+- Python 3.10+ installed and on PATH (`python3 --version` to check)
+- Install dependencies:
+  cd MCP/mcp-server
+  pip install -r requirements.txt
 ## Acknowledgments
 
 Bird data from [eBird](https://ebird.org), Cornell Lab of Ornithology. MCP server by [birdingkit](https://github.com/birdingkit/ebird-mcp-server) — not my work. Report writing planned via Anthropic's Claude API.
