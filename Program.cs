@@ -183,7 +183,8 @@ async Task<string> AskEbirdAsync(string prompt)
         MaxTokens = 4000,               // need to test this to see if 400 is actually enough
         Tools =
         [
-            new WebSearchTool20250305(), // claudes current web search engine
+            new WebSearchTool20250305 { MaxUses = 2 }, // claudes current web search engine
+
         ],
         Messages =
         [
