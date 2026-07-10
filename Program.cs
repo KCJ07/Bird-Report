@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Text.Json;
 
 
-/// minimal API
+/// minimal API for local db caching
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 

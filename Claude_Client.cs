@@ -11,6 +11,16 @@
 //   dotnet add package ModelContextProtocol --prerelease
 //   dotnet add package Microsoft.Extensions.AI
 
+//TODO:
+// move to main file (program.cs)
+// Fix path                                 X
+// figure out web searching
+// combine two outputs into one output
+// make sure it can access env keys
+// comment code 
+// figure out how to make it cleanly wrap up at 5 tool call uses
+
+
 using Anthropic;
 using Anthropic.Models.Messages;
 using Microsoft.Extensions.AI;
@@ -29,12 +39,13 @@ AnthropicClient anthropicClient = new()
 // ============================================================
 
 // Point this at the folder containing server.py + client.py.
-var mcpServerDirectory = Path.Combine(AppContext.BaseDirectory, "mcp-server");
+var mcpServerDirectory = Path.Combine(Environment.CurrentDirectory + "/MCP", "mcp-server");
 
+// spawns the MCP server to handle its IO
 var transport = new StdioClientTransport(new StdioClientTransportOptions
 {
     Name = "ebird",
-    Command = "python",              // use "python3" if that's what your machine expects
+    Command = "python3",              // switched this to python3 because client and server in mcp are py3. pretty sure this means we need to install py3 to run this as well
     Arguments = ["server.py"],
     WorkingDirectory = mcpServerDirectory,
     EnvironmentVariables = new Dictionary<string, string?>
@@ -45,20 +56,44 @@ var transport = new StdioClientTransport(new StdioClientTransportOptions
 
 await using var mcpClient = await McpClient.CreateAsync(transport);
 
-IChatClient chatClient = anthropicClient
-    .AsIChatClient("claude-sonnet-5")   // current Sonnet model id
+IChatClient innerChatClient = anthropicClient
+    .AsIChatClient("claude-sonnet-5");   // current Sonnet model id
+
+IChatClient chatClient = innerChatClient
     .AsBuilder()
-    .UseFunctionInvocation()            // handles the tool-call loop automatically
+    .UseFunctionInvocation(configure: c =>
+    {
+        c.MaximumIterationsPerRequest = 5;  // handles the tool-call loop and sets it to 5. No guarentee that it finishes up cleanly?
+    })            
     .Build();
 
+
+// calls the LLM with the tools list from our MCP
 async Task<string> AskEbirdAsync(string prompt)
 {
     ChatOptions options = new()
     {
-        Tools = [.. await mcpClient.ListToolsAsync()],
+        Tools = [.. (await mcpClient.ListToolsAsync()).Cast<AITool>()], // super fancy syntax
     };
 
     var response = await chatClient.GetResponseAsync(prompt, options);
+
+    // if this results to true it means did not call as many tools as it wanted
+    if (response.FinishReason == ChatFinishReason.ToolCalls)
+    {
+        // build the conversation up to this point differentiating our prompt and claudes response
+        var history = new List<ChatMessage>
+        {
+            new(ChatRole.User, prompt),            // prompt
+            new(ChatRole.Assistant, response.Text) // response
+        };
+
+        history.Add(new ChatMessage(ChatRole.User, "Give your best final answer now based only on what you've already found, without calling any more tools."));
+
+        response = await chatClient.GetResponseAsync(history, new ChatOptions()); // re send everything with no tools
+
+    }
+
     return response.Text;
 }
 
