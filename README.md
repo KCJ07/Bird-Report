@@ -10,8 +10,8 @@ I watch the same handful of eBird spots daily, and most days nothing's changed. 
 
 - Pull recent and notable sightings for saved locations (lat/lng + radius), any number of them
 - Keep a local archive so it's not re-querying the same window twice
-- Compute the boring, factual stuff deterministically — species counts, week-over-week deltas, checklist volume — so the numbers in the report are always right
-- Let Claude enrich that with live data of its own choosing (historic comparisons, regional notables, arrival trends) and write the actual narrative: a short daily writeup, an interesting observation or trend, and a prediction for the next day
+- Compute the factual stuff deterministically (species counts, week-over-week deltas, checklist volume) so the numbers in the report are always right
+- Let Claude enrich that with live data of its own choosing (historic comparisons, regional notables, arrival trends) and write the narrative in natural language: a short daily writeup, an interesting observation or trend, and a prediction for the next day
 - Send the result as a daily email
 - Generate a longer weekly report on the same deterministic-stats-first pattern
 - Flag species from a personal watchlist when they turn up
@@ -28,7 +28,7 @@ Three layers, kept deliberately separate so any one can be swapped without touch
 - `WatchSpecies` — the watchlist
 - `ObservationLog` — running archive, keyed by checklist + species
 - `HistoricCache` — cached historic-by-date results (a multi-year weekly baseline means one call per past year, so this should save a lot of repeat querying)
-- `ReportLog` — dedupe log so nothing gets reported twice
+- `YesterdaysInfo` - yesterdays fun facts and recomendations so every day is slightly different even if environments don't change
 
 **C# orchestrator (ASP.NET Core + Quartz.NET)** — where the actual application logic would live.
 - Scheduled jobs for collection, daily reports, weekly reports
@@ -52,32 +52,17 @@ Three layers, kept deliberately separate so any one can be swapped without touch
 | Frontend | Blazor Server — minimal, this is a personal tool |
 | Protocol | MCP, stdio transport |
 
-## Proposed project structure
-
-```
-BirdReport.Api            ASP.NET Core host, dashboard, admin endpoints
-BirdReport.Jobs           Quartz.NET jobs (collect, daily report, weekly report)
-BirdReport.Data           EF Core models, migrations, DbContext
-BirdReport.Orchestrator   MCP client, stats computation, bounded LLM tool-calling loop, email dispatch
-```
-
-The MCP server won't live in this repo — it'll be a separate Python process, cloned and run per its own instructions, referenced by path in config.
-
 ## Setup (once this exists)
 
 1. Get an eBird API key: https://ebird.org/api/keygen
-2. Clone [birdingkit/ebird-mcp-server](https://github.com/birdingkit/ebird-mcp-server) and get it running with your key.
-3. Clone this repo, set the MCP server path, Anthropic API key, and email/SMTP config in `appsettings.json` (or user secrets, ideally from the start this time).
-4. `dotnet ef database update`
-5. `dotnet run --project BirdReport.Api`
+2. 
 
 ## Things to keep in mind about the data
 
 - No eBird endpoint returns *your own* submission history — the API key just authenticates, it doesn't scope to you. Getting that in would mean importing eBird's "Download My Data" CSV by hand — not something this will do out of the gate.
-- "Checklists submitted" will be what gets reported, not "number of people" — those aren't the same thing, since one person can submit several checklists and submitter identity isn't reliably exposed outside notable/full-detail results.
+- "Checklists submitted" will be what gets reported and used as the statistic to determine the "volume of birding". This is not neccesarily representative because one person can submit multiple checklists per day.
 - The historic endpoint is per-date, not range-based, so a multi-year baseline costs one call per year per location — hence the plan for `HistoricCache`.
 - eBird coordinates are precise to ~1km (two decimal places). Fine for regional queries, not for anything tighter.
-- Once Claude has live tool access, report content stops being fully deterministic — run-to-run variance in what it notices or how many calls it makes is expected and fine for a personal daily email, just worth knowing going in.
 
 ## Roadmap
 
@@ -96,16 +81,13 @@ The MCP server won't live in this repo — it'll be a separate Python process, c
 - [ ] Top hotspot area in your county, past 3 days ( expensive — loops through every hotspot in the area)
 
 **Claude, key reasoning**
-- [ ] Ask for differences in birds seen past day vs. past week
-- [ ] Ask why it thinks these new birds showed up
-- [ ] Ask for notable observations (detail=full), and have it explain why/how it thinks they were observed, and whether they've been reviewed
-- [ ] Flag "seen here but rare for the area"
-- [ ] Give taxonomy or a fun fact for a bird seen yesterday
-- [ ] Figure out how to incorporate web searching
-- [ ] Figure out how to incorporate weather API
-
-**MCP, via cache**
-- [ ] Difference between yesterday and today — why, including weather context
+- [X] Ask for differences in birds seen past day vs. day before
+- [X] Ask why it thinks these new birds showed up
+- [X] Ask for notable observations (detail=full), and have it explain why/how it thinks they were observed, and whether they've been reviewed
+- [X] Flag "seen here but rare for the area"
+- [X] Give taxonomy or a fun fact for a bird seen yesterday
+- [X] Figure out how to incorporate web searching
+- [] Figure out how to incorporate weather API
 
 ### Weekly
 - [ ] Deterministic stats, grounded in real week-over-week deltas, not just a bigger daily summary
@@ -118,16 +100,16 @@ The MCP server won't live in this repo — it'll be a separate Python process, c
 - [X] Is there a better alternative to using a raw API key?
 
 ### Infra / setup
-- [ ] Add `.gitignore` (`obj/`, `bin/`, IDE files, secrets)
-- [ ] Configure environment variables (`.env`) for API keys
+- [X] Add `.gitignore` (`obj/`, `bin/`, IDE files, secrets)
+- [X] Configure environment variables (`.env`) for API keys
 - [ ] Add caching
-- [ ] Fork the MCP server and modify it so it doesn't depend on a Claude Desktop UI
+- [X] Fork the MCP server and modify it so it doesn't depend on a Claude Desktop UI
 - [ ] Summarize activity for any days that got skipped (missed run, outage, etc.)
 
 ### Base build
-- [ ] Set up the base project structure (API host, jobs, data layer, orchestrator)
-- [ ] Get the MCP server talking to the orchestrator over stdio
-- [ ] Wire up the bounded agentic loop: stats as context, live MCP tool access, turn cap, forced final answer
+- [X] Set up the base project structure (API host, jobs, data layer, orchestrator)
+- [X] Get the MCP server talking to the orchestrator over stdio
+- [X] Wire up the bounded agentic loop: stats as context, live MCP tool access, turn cap, forced final answer
 - [ ] Daily email delivery
 - [ ] Minimal dashboard to view reports
 - [ ] Import personal submission history from eBird's CSV export
