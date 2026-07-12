@@ -127,3 +127,6 @@ Bird data from [eBird](https://ebird.org), Cornell Lab of Ornithology. MCP serve
 ## License
 
 MIT
+
+### Pricing
+Using claudes API tokens it currently costs ~25 cents per summary - Too Expensive!
