@@ -145,9 +145,27 @@ IChatClient chatClient = innerChatClient
 // calls the LLM with the tools list from our MCP
 async Task<string> AskEbirdAsync(string prompt)
 {
+    var relevantToolNames = new HashSet<string> // cuts down token usage by not sending redundant tools
+    {
+        "ebird_get_recent_observations_for_species",
+        "ebird_get_nearest_observations_for_species",
+        "ebird_get_historic_observations",
+        "ebird_get_species_list_for_region",
+        "ebird_get_hotspots",
+        "ebird_get_nearby_hotspots",
+        "ebird_get_hotspot_info",
+        "ebird_get_notable_observations",
+        "ebird_get_recent_observations",
+        "ebird_get_regional_statistics_on_date",
+        "ebird_get_recent_checklists_feed",
+    };
+    var allTools = await mcpClient.ListToolsAsync();
+    var filteredTools = allTools.Where(t => relevantToolNames.Contains(t.Name));
+
+
     ChatOptions options = new()
     {
-        Tools = [.. (await mcpClient.ListToolsAsync()).Cast<AITool>()], // super fancy syntax
+        Tools = [.. filteredTools.Cast<AITool>()], // super fancy syntax
         MaxOutputTokens = 4096,
     };
 
@@ -209,7 +227,7 @@ async Task<string> AskEbirdAsync(string prompt)
         var fullResponse = await anthropicClient.Messages.Create(parameters);
         
         return string.Join(
-            "\n\n",
+            "",
             fullResponse.Content
                 .Select(block => block.Value)
                 .OfType<TextBlock>()
@@ -242,10 +260,10 @@ async Task<string> AskEbirdAsync(string prompt)
     outputs are from yesterday. You have up to 3 rounds of tool use available if you need to look up additional eBird data — each round can include multiple tool calls if needed. 
     Do not make an absurd amount of calls to ebird because there is a personal limit. 
 
-    Species seen in past day: {speciesOneDayJSON}
-    Past-day species count: {speciesOneDayCount}
 
-    Species seen in past 7 days: {speciesSevenDayJSON}
+
+    Species seen in past 7 days including past day: {speciesSevenDayJSON}
+    Past-day species count: {speciesOneDayCount}
     7-day species count: {speciesSevenDayCount}
 
     County: {countyCode}
@@ -259,7 +277,6 @@ async Task<string> AskEbirdAsync(string prompt)
     - Share a fun fact about one of the birds seen.  
     - Incorporate weather or migration patterns into your summary.
     """;
-
 
 var recentObservations = await AskEbirdAsync(prompt);
 
