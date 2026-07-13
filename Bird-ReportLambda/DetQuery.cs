@@ -1,12 +1,9 @@
 // 
 // Class to handle Queries to e-Bird API for deterministic calculations
 //
-
-using System.Text;
-using Microsoft.Extensions.ObjectPool;
-using Microsoft.Maui.Devices.Sensors;
 using System.Text.Json;
 using System.Net.Http.Json;
+
 
 
 
@@ -19,19 +16,19 @@ class DetQuery
         client.DefaultRequestHeaders.Accept.Clear();
         // put in each individuals api token
         client.DefaultRequestHeaders.Add("x-ebirdapitoken", apiToken);
-
     }
 
     // get users location via request (up for change to get it done automatically)
-    public async Task<(double lat, double lng)> GetLatLongFromAddr()
+    public async Task<(double lat, double lng)> GetLatLongFromAddr(string location)
     {
 
         // loop untill valid address is recieved
         while(true)
         {
             try {
-            Console.WriteLine("Please put in your address");
-            string addr = Console.ReadLine();
+            //Console.WriteLine("Please put in your address");
+            //string addr = Console.ReadLine();
+            string addr = location;
 
             string url = "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress" +
                 $"?address={Uri.EscapeDataString(addr)}" +

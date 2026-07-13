@@ -1,34 +1,22 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Net.Sockets;
 using System.Text.Json;
 using Anthropic;
 using Anthropic.Models.Messages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
-using Amazon.Lambda.CloudWatchEvents.ScheduledEvents;
 using Amazon.Lambda.Core;
+using Amazon.SimpleEmailV2;
+using Amazon.SimpleEmailV2.Model;
 
 
 
 /// TODO:
-/// make sure all notable stuff also uses distancekm    
+/// make sure all notable stuff also uses distancekm   X 
 /// figure out how emailing works
-/// test the db that it works
-/// add all users in db
-/// figure out encryption               X
-
-/* if (Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME") == null)
-{
-    DotNetEnv.Env.Load(); // only runs locally — .env file won't exist in the Lambda image anyway
-} */
-//using var db = new BirdReportContext();
-//db.Database.EnsureCreated();
-
-//var me = new User { Name = "Kevin", Email = "kjohanson321@gmail.com", Location = "17354 n 6th ln Glendale AZ", Summaries = new() };
-//db.Users.Add(me);
-//db.SaveChanges(); // needed here so `me.Id` gets populated below
+/// test the local db that it works                X     
+/// add all users in db (still need to add maria)  X
+/// figure out encryption                          X
+/// figure out how redirection works for the db
 
 
 public class Function
@@ -36,10 +24,12 @@ public class Function
 
     public Function()
     {
+        
         if (Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME") == null)
         {
             DotNetEnv.Env.Load(); // only fires when running locally, not in Lambda
         }
+
     }
 
     public async Task FunctionHandler(object input, ILambdaContext context)
@@ -55,10 +45,11 @@ public class Function
             int distKm = user.distance; 
 
 
-            // ask user for address
-            var (lat, lng) = await Det.GetLatLongFromAddr();
+            // get users address from table
+            var (lat, lng) = await Det.GetLatLongFromAddr(user.Location);
 
             // Get Species List for past day 
+            // might be redundant because new prompt just sends 7 day
             List<Observation> speciesOneDay = await Det.GetSpeciesNearby(lat,lng, distKm);
             string speciesOneDayJSON = JsonSerializer.Serialize(speciesOneDay);
             // Get Species List for past 7 days 
@@ -85,8 +76,45 @@ public class Function
             List<NotableReport> notableReportOneDay = await Det.GetNearbyNotable(countyCode);
             string notableReportOneDayJSON = JsonSerializer.Serialize(notableReportOneDay);
 
+            //
+            //  Function to send email using SESv2
+            //
 
+            async Task SendEmailAsync(string toAddress, string subject, string body, bool isHtml)
+            {
+                using var sesClient = new AmazonSimpleEmailServiceV2Client(Amazon.RegionEndpoint.USEast2); 
 
+                var sendRequest = new SendEmailRequest
+                {
+                    FromEmailAddress = "bird.reporter26@gmail.com", 
+                    Destination = new Destination
+                    {
+                        ToAddresses = new List<string> { toAddress }
+                    },
+                    Content = new EmailContent
+                    {
+                        Simple = new Amazon.SimpleEmailV2.Model.Message
+                        {
+                            Subject = new Amazon.SimpleEmailV2.Model.Content { Data = subject },
+                            Body = new Body
+                            {
+                                Html = isHtml ? new Amazon.SimpleEmailV2.Model.Content { Data = body } : null,
+                                Text = !isHtml ? new Amazon.SimpleEmailV2.Model.Content { Data = body } : null,
+                            }
+                        }
+                    }
+                };
+
+                try
+                {
+                    var response = await sesClient.SendEmailAsync(sendRequest);
+                    Console.WriteLine($"[SES v2] Sent, MessageId: {response.MessageId}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SES v2] Failed to send to {toAddress}: {ex.Message}");
+                }
+            };
 
             //// MCP portion
 
@@ -126,9 +154,10 @@ public class Function
             // ============================================================
 
             // Point this at the folder containing server.py + client.py.
-            var mcpServerDirectory = Path.Combine(Environment.CurrentDirectory + "\\MCP");
+            var mcpServerDirectory = Path.Combine(Environment.CurrentDirectory, "MCP");
 
             // spawns the MCP server to handle its IO
+            // creates a new instance for every user (Currently a lot of overhead but doesn't matter for two people)
             var transport = new StdioClientTransport(new StdioClientTransportOptions
             {
                 Name = "ebird",
@@ -150,7 +179,7 @@ public class Function
                 .AsBuilder()
                 .UseFunctionInvocation(configure: c =>
                 {
-                    c.MaximumIterationsPerRequest = 3;  // handles the tool-call loop and sets it to 5. No guarentee that it finishes up cleanly?
+                    c.MaximumIterationsPerRequest = 3;  // handles the tool-call loop and sets it to 3. No guarentee that it finishes up cleanly?
                 })            
                 .Build();
 
@@ -297,6 +326,9 @@ public class Function
 
             Console.WriteLine("=== eBird observations ===");
             Console.WriteLine(recentObservations);
+
+
+            await SendEmailAsync(user.Email, "Your Daily Birding Digest", recentObservations, isHtml: false);
 
         }
     }
