@@ -12,5 +12,9 @@
 <ItemGroup>
   <PackageReference Include="AWSSDK.SimpleEmail" Version="4.0.100.3" />
 </ItemGroup>
-
+<ItemGroup>
+  <None Include=".env" Condition="Exists('.env')">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
 </Project>
