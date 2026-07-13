@@ -8,6 +8,9 @@ public class BirdReportContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
-        options.UseSqlite("Data Source=birdreport.db"); // db file 
+        string dbPath = Environment.GetEnvironmentVariable("SQLITE_DB_PATH")
+            ?? "birdreport.db"; // local dev fallback 
+
+        options.UseSqlite($"Data Source={dbPath}");
     }
 }

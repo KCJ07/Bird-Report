@@ -155,15 +155,11 @@ public class Function
             // PART 1 - eBird MCP tools, via IChatClient + automatic tool-calling + Web
             // ============================================================
 
+            // if lambda task root null fall back on local.Runner directory
+            string taskRoot = Environment.GetEnvironmentVariable("LAMBDA_TASK_ROOT")
+             ?? Path.Combine(Environment.CurrentDirectory, "..", "..", "..", "..", "Bird-ReportLambda");
 
-            // assume were in lambda
-            var mcpServerDirectory = Path.Combine(Environment.CurrentDirectory, "MCP");
-
-            // Point this at the folder containing server.py + client.py. if were in local
-            if (Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME") == null) {
-                mcpServerDirectory = Path.Combine(Environment.CurrentDirectory, "..", "..", "..", "..", "Bird-ReportLambda", "MCP");
-
-            } 
+            var mcpServerDirectory = Path.Combine(taskRoot, "MCP");
 
             // spawns the MCP server to handle its IO
             // creates a new instance for every user (Currently a lot of overhead but doesn't matter for two people)
