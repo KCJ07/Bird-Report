@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 <ItemGroup>
-  <ProjectReference Include="../Bird-Report/Bird-Report.csproj" />
+  <ProjectReference Include="../Bird-ReportLambda/Bird-Report.csproj" />
 </ItemGroup>
 
 </Project>
