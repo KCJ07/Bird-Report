@@ -7,7 +7,9 @@ using ModelContextProtocol.Client;
 using Amazon.Lambda.Core;
 using Amazon.SimpleEmailV2;
 using Amazon.SimpleEmailV2.Model;
-
+using Amazon.S3;
+using Amazon.S3.Transfer;
+[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 
 /// TODO:
@@ -17,6 +19,7 @@ using Amazon.SimpleEmailV2.Model;
 /// add all users in db (still need to add maria)  X
 /// figure out encryption                          X
 /// figure out how redirection works for the db
+
 
 
 public class Function
@@ -38,6 +41,20 @@ public class Function
     {
         using var db = new BirdReportContext();
         List<User> users = await db.Users.ToListAsync(); // list of users
+
+        // Download the SQLite DB from S3 into Lambda's local /tmp scratch space
+        string bucketName = "bird-report-db-036215883899";
+        string s3Key = "birdreport.db";
+        string localDbPath = "/tmp/birdreport.db";
+
+        using (var s3Client = new AmazonS3Client(Amazon.RegionEndpoint.USEast2))
+        {
+            var transferUtility = new TransferUtility(s3Client);
+            await transferUtility.DownloadAsync(localDbPath, bucketName, s3Key);
+        }
+
+        Environment.SetEnvironmentVariable("SQLITE_DB_PATH", localDbPath);
+
 
         foreach (var user in users)
         {
@@ -166,7 +183,7 @@ public class Function
             var transport = new StdioClientTransport(new StdioClientTransportOptions
             {
                 Name = "ebird",
-                Command = "python",              // switched this to python
+                Command = "python3.11",              // switched this to python3.11
                 Arguments = ["server.py"],
                 WorkingDirectory = mcpServerDirectory,
                 EnvironmentVariables = new Dictionary<string, string?>
